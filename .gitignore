@@ -1,3 +1,7 @@
+### IntelliJ IDEs
+#config files with window overlay and stuff
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

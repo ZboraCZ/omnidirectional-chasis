@@ -1,10 +1,8 @@
 # README: First you need to connect gamepad ->  $ sudo ds4drv
 # poznamka: Shortcut pro komentovani/odkomentovani bloku kodu -> Ctrl + #
 import pygame
-
 from DisplayController import DisplayController
 from GamepadController import GamepadController
-
 
 # Initialize pyGame library for PS4 controller to use it
 pygame.init()
@@ -64,22 +62,28 @@ while applicationFinished is False:
 
         # GO LEFT ; RIGHT -1.0 ; 1.0 #
         leftXaxis = round(joystick.get_axis(0), 3)
+        if abs(leftXaxis) < 0.1: leftXaxis=0.0
         displayController.print("GO LEFT ; RIGHT (-1.0 : 1.0): {}".format(leftXaxis))
         displayController.print("")
 
-        # GO FORWARD ; BACKWARD -1.0 ; 1.0 #
-        leftYaxis = round(joystick.get_axis(1), 3)
-        displayController.print("GO FORWARD ; BACKWARD (-1.0 : 1.0): {}".format(leftYaxis))
+        # GO FORWARD ; BACKWARD 1.0 ; -1.0 #
+        #Multiplying by -1 because we want correct coordinates for magnitudes and distances of vectors
+        #To go forward, -1 value is not correct, thats why we multiply by -1... 
+        leftYaxis = -1 * round(joystick.get_axis(1), 3)
+        if abs(leftYaxis) < 0.1: leftYaxis=0.0
+        displayController.print("GO FORWARD ; BACKWARD (1.0 : -1.0): {}".format(leftYaxis))
         displayController.print("")
 
         ###RIGHT JOYSTICK###
         # ROTATE LEFT ; RIGHT -1.0 ; 1.0 #
         rightXaxis = round(joystick.get_axis(2), 3)
+        if abs(rightXaxis) < 0.1: rightXaxis=0.0
         displayController.print("ROTATE LEFT ; RIGHT (-1.0 : 1.0): {}".format(rightXaxis))
         displayController.print("")
 
         # TODO - calculate values and send them to arduino
-        gamepadController.sendInstructions(leftXaxis, leftYaxis, rightXaxis)
+        gamepadController.calculateVelocitiesOfWheels(leftXaxis, leftYaxis, rightXaxis)
+        #gamepadController.sendInstructions(leftXaxis, leftYaxis, rightXaxis)
 
         ##### END OF MY CUSTOM EDIT FOR AXES #####
 

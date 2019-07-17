@@ -11,7 +11,7 @@ class DisplayController:
         self.WHITE = (255, 255, 255)
 
         # The width and height of the display screen [width,height]
-        self.screenSize = [500, 700]
+        self.screenSize = [500, 300]
         self.screen = pygame.display.set_mode(self.screenSize)
         pygame.display.set_caption("Controller Overlay")
 
@@ -32,7 +32,6 @@ class DisplayController:
         self.y += self.line_height
 
     def reset(self):
-        print('Resetting window to default position...')
         self.x = 10
         self.y = 10
         self.line_height = 15
@@ -45,11 +44,9 @@ class DisplayController:
 
     def fillScreen(self, color):
         if color == 'white':
-            print("Filling screen to white...")
             self.screen.fill(self.WHITE)
 
         elif color == 'black':
-            print('Filling screen to black...')
             self.screen.fill(self.BLACK)
 
         else:

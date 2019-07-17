@@ -66,17 +66,17 @@ while applicationFinished is False:
         displayController.print("GO LEFT ; RIGHT (-1.0 : 1.0): {}".format(leftXaxis))
         displayController.print("")
 
-        # GO FORWARD ; BACKWARD 1.0 ; -1.0 #
-        #Multiplying by -1 because we want correct coordinates for magnitudes and distances of vectors
-        #To go forward, -1 value is not correct, thats why we multiply by -1... 
-        leftYaxis = -1 * round(joystick.get_axis(1), 3)
+        # GO FORWARD ; BACKWARD -1.0 ; 1.0 #
+        leftYaxis = round(joystick.get_axis(1), 3)
+        # Pocita se s malymi odchylkami, kdyz jsu packy v klidu, at nam nelita podvozek
         if abs(leftYaxis) < 0.1: leftYaxis=0.0
-        displayController.print("GO FORWARD ; BACKWARD (1.0 : -1.0): {}".format(leftYaxis))
+        displayController.print("GO FORWARD ; BACKWARD (-1.0 : 1.0): {}".format(leftYaxis))
         displayController.print("")
 
         ###RIGHT JOYSTICK###
         # ROTATE LEFT ; RIGHT -1.0 ; 1.0 #
         rightXaxis = round(joystick.get_axis(2), 3)
+        # Pocita se s malymi odchylkami, kdyz jsu packy v klidu, at nam nelita podvozek
         if abs(rightXaxis) < 0.1: rightXaxis=0.0
         displayController.print("ROTATE LEFT ; RIGHT (-1.0 : 1.0): {}".format(rightXaxis))
         displayController.print("")

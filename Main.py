@@ -63,27 +63,41 @@ while applicationFinished is False:
         # GO LEFT ; RIGHT -1.0 ; 1.0 #
         leftXaxis = round(joystick.get_axis(0), 3)
         if abs(leftXaxis) < 0.1: leftXaxis=0.0
-        displayController.print("GO LEFT ; RIGHT (-1.0 : 1.0): {}".format(leftXaxis))
-        displayController.print("")
 
         # GO FORWARD ; BACKWARD -1.0 ; 1.0 #
         leftYaxis = round(joystick.get_axis(1), 3)
         # Pocita se s malymi odchylkami, kdyz jsu packy v klidu, at nam nelita podvozek
         if abs(leftYaxis) < 0.1: leftYaxis=0.0
-        displayController.print("GO FORWARD ; BACKWARD (-1.0 : 1.0): {}".format(leftYaxis))
-        displayController.print("")
 
         ###RIGHT JOYSTICK###
         # ROTATE LEFT ; RIGHT -1.0 ; 1.0 #
         rightXaxis = round(joystick.get_axis(2), 3)
         # Pocita se s malymi odchylkami, kdyz jsu packy v klidu, at nam nelita podvozek
         if abs(rightXaxis) < 0.1: rightXaxis=0.0
+
+        # Recalculate wrong values, on 1 or -1 and not 0 on the other direction
+        # Wrong values are caused by some little hardware incompatibility
+        if abs(leftXaxis) == 1 and leftYaxis != 0:
+            leftXaxis = gamepadController.calculateLeftXaxisValueByPythagorasTheorem(leftXaxis, leftYaxis)
+
+        elif abs(leftYaxis) == 1 and leftXaxis != 0:
+            leftYaxis = gamepadController.calculateLeftYaxisValueByPythagorasTheorem(leftXaxis, leftYaxis)
+
+        ###### Print joystick values to the screen ######
+        # Print LEFT TO RIGHT DIRECTION VALUE
+        displayController.print("GO LEFT ; RIGHT (-1.0 : 1.0): {}".format(leftXaxis))
+        displayController.print("")
+
+        # Print FORWARD TO BACKWARD DIRECTION VALUE
+        displayController.print("GO FORWARD ; BACKWARD (-1.0 : 1.0): {}".format(leftYaxis))
+        displayController.print("")
+
+        # Print LEFT TO RIGHT ROTATION VALUE
         displayController.print("ROTATE LEFT ; RIGHT (-1.0 : 1.0): {}".format(rightXaxis))
         displayController.print("")
 
         # TODO - calculate values and send them to arduino
         gamepadController.calculateVelocitiesOfWheels(leftXaxis, leftYaxis, rightXaxis)
-        #gamepadController.sendInstructions(leftXaxis, leftYaxis, rightXaxis)
 
         ##### END OF MY CUSTOM EDIT FOR AXES #####
 

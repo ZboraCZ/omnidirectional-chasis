@@ -17,13 +17,22 @@ class GamepadController:
     # Get specific Joystick instance of the joystick list
     def getJoystick(self, idNumber):
         return pygame.joystick.Joystick(idNumber)
-    
+
+    # Correct X movement value by recalculating its wrong value caused by little incompatibility
+    def calculateLeftXaxisValueByPythagorasTheorem(self, leftXaxis, leftYaxis):
+        return math.sqrt(1-math.pow(leftYaxis, 2)) * leftXaxis
+
+    # Correct Y movement value by recalculating its wrong value caused by little incompatibility
+    def calculateLeftYaxisValueByPythagorasTheorem(self, leftXaxis, leftYaxis):
+        return math.sqrt(1-math.pow(leftXaxis, 2)) * leftYaxis
+
     # Calculate speeds (velocities of all wheels)
     # params leftXaxis: GO LEFT ; RIGHT (-1.0 : 1.0)
     # leftYaxis: GO FORWARD ; BACKWARD (-1.0 : 1.0)
     # rightXaxis: ROTATE LEFT ; RIGHT -1.0 ; 1.0
     def calculateVelocitiesOfWheels(self, leftXaxis, leftYaxis, rightXaxis):
         if not (abs(leftXaxis) == 0 and abs(leftYaxis) == 0 and abs(rightXaxis) == 0):
+
             # Jak rychle chceme jet => Jak moc je vyklonena packa
             magnitude = math.sqrt( math.pow(leftXaxis, 2) + math.pow(leftYaxis, 2) )
             if magnitude > 1: magnitude = 1
@@ -47,8 +56,8 @@ class GamepadController:
             
             print('magnitude: ' + str(magnitude))
             print('direction: ' + str(direction))
-            print('vectorX: ' + str(vectorX))
-            
+            print('vectorX: ' + str(vectorX) + '; vectorY: ' + str(vectorY))
+
             # nastaveni finalniho otaceni na motorky
             # Arduino zadava motorkum rozpeti od 0 do 255, proto nasobime desetinne cislo 255kou
             # zaokrouhluje se na cela cisla, kvuli I2C prenosu
@@ -73,10 +82,12 @@ class GamepadController:
             else:
                 motor3Speed = int(motor3Speed) * 255
 
-            
+
             print(str(motor1Speed) + ' ' + str(motor2Speed) + ' ' + str(motor3Speed))
 
-    #def sendInstructions(self, leftXaxis, leftYaxis, rightXaxis):
+            #self.sendInstructions(motor1Speed, motor2Speed, motor3Speed)
+
+    #def sendInstructions(self, motor1speed, motor2speed, motor3speed):
         # TODO - send axis for movement to Arduino
         #address = 30
         #data = [leftXaxis, leftYaxis, rightXaxis]

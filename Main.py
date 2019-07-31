@@ -85,6 +85,9 @@ while applicationFinished is False:
 
         ###### Print joystick values to the screen ######
         # Print LEFT TO RIGHT DIRECTION VALUE
+        #first round the values again - after pythagoras recalcs, numbers are wide
+        leftXaxis = round(leftXaxis, 3)
+        leftYaxis = round(leftYaxis, 3)
         displayController.print("GO LEFT ; RIGHT (-1.0 : 1.0): {}".format(leftXaxis))
         displayController.print("")
 

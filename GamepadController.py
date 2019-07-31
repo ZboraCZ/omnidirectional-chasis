@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import pygame
 import math
-from time import sleep
+import time
 from smbus2 import SMBusWrapper
 
 
@@ -83,15 +83,30 @@ class GamepadController:
                 motor3Speed = int(motor3Speed) * 255
 
 
-            print(str(motor1Speed) + ' ' + str(motor2Speed) + ' ' + str(motor3Speed))
+            print(str(motor1Speed) + ' ' + str(motor2Speed) + ' ' + str(motor3Speed) + ' | ' + str(rightXaxis))
 
-            #self.sendInstructions(motor1Speed, motor2Speed, motor3Speed)
+            # self.sendInstructions(motor1Speed, motor2Speed, motor3Speed, rightXaxis)
 
-    #def sendInstructions(self, motor1speed, motor2speed, motor3speed):
+    def sendInstructions(self, motor1speed, motor2speed, motor3speed, rightXaxis):
         # TODO - send axis for movement to Arduino
-        #address = 30
-        #data = [leftXaxis, leftYaxis, rightXaxis]
-        #try:
-            #with SMBusWrapper(1) as bus:
-                # Write a block of some bytes to address ...
-                #bus.write_i2c_block_data(address, 0, data)
+#        bus = smbus.SMBus(1)
+        address = 0x04
+#        bus.write_byte(address, motor1speed)
+#        bus.write_byte_data(address, 0, motor1speed)
+#        
+#        bus.write_byte(address, motor2speed)
+#        bus.write_byte_data(address, 0, motor2speed)
+#        
+#        bus.write_byte(address, motor3speed)
+#        bus.write_byte_data(address, 0, motor3speed)
+#        
+#        bus.write_byte(address, rightXaxis)
+#        bus.write_byte_data(address, 0, rightXaxis)
+#        time.sleep(1)
+        
+        data = rightXaxis
+        try:
+            with SMBusWrapper(1) as bus:
+                #Write a block of some bytes to address ...
+                bus.write_byte(address, data) 
+                bus.write_i2c_block_data(address, 0, data)

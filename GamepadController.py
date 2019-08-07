@@ -6,6 +6,9 @@ from smbus2 import SMBusWrapper
 
 
 class GamepadController:
+    # Constant with arduino Slave address to send computed values of motors to
+    ARDUINO_ADDRESS = 0x04
+    
     # Constructor for whole class controlling all the gamepads
     def __init__(self):
         # Initialize the functionalities with joysticks
@@ -81,32 +84,50 @@ class GamepadController:
                 motor3Speed = int(round(motor3Speed * 255, 0))
             else:
                 motor3Speed = int(motor3Speed) * 255
+                
+            if abs(rightXaxis) <= 1:
+                rightXaxis = int(round(rightXaxis * 255, 0))
+            else:
+                rightXaxis = int(rightXaxis) * 255
 
-
+            print('-----Motory pred upravou pro odeslani-----')
             print(str(motor1Speed) + ' ' + str(motor2Speed) + ' ' + str(motor3Speed) + ' | ' + str(rightXaxis))
 
-            # self.sendInstructions(motor1Speed, motor2Speed, motor3Speed, rightXaxis)
+            # Prepsani hodnot motoru pouze na kladna cisla a za ne pridani indexu 
+            # Kladna hodnota mtorou -> 1 | Zaporna hodnota motoru -> 0
+            if motor1Speed < 0:
+                indexMotor1Speed = 0
+                motor1Speed = abs(motor1Speed)
+            else:
+                indexMotor1Speed = 1
 
-    def sendInstructions(self, motor1speed, motor2speed, motor3speed, rightXaxis):
-        # TODO - send axis for movement to Arduino
-#        bus = smbus.SMBus(1)
-        address = 0x04
-#        bus.write_byte(address, motor1speed)
-#        bus.write_byte_data(address, 0, motor1speed)
-#        
-#        bus.write_byte(address, motor2speed)
-#        bus.write_byte_data(address, 0, motor2speed)
-#        
-#        bus.write_byte(address, motor3speed)
-#        bus.write_byte_data(address, 0, motor3speed)
-#        
-#        bus.write_byte(address, rightXaxis)
-#        bus.write_byte_data(address, 0, rightXaxis)
-#        time.sleep(1)
+            if motor2Speed < 0:
+                indexMotor2Speed = 0
+                motor2Speed = abs(motor2Speed)
+            else:
+                indexMotor2Speed = 1
+
+            if motor3Speed < 0:
+                indexMotor3Speed = 0
+                motor3Speed = abs(motor3Speed)
+            else:
+                indexMotor3Speed = 1
+                
+            if rightXaxis < 0:
+                indexRightXaxis = 0
+                rightXaxis = abs(rightXaxis)
+            else:
+                indexRightXaxis = 1
+
+            print('-----Motory po uprave pro odeslani-----')
+            print(str(motor1Speed) + ' ' + str(indexMotor1Speed) + ' '+ str(motor2Speed) + ' ' + str(indexMotor2Speed) + ' ' + str(motor3Speed) + ' ' + str(indexMotor3Speed) + ' | ' + str(rightXaxis) + ' ' + str(indexRightXaxis))
+            
+            self.sendInstructions(motor1Speed,indexMotor1Speed, motor2Speed,indexMotor2Speed, motor3Speed,indexMotor3Speed, rightXaxis, indexRightXaxis)
+
+    
+    def sendInstructions(self, motor1Speed,indexMotor1Speed, motor2Speed,indexMotor2Speed, motor3Speed,indexMotor3Speed, rightXaxis, indexRightXaxis):
+        # print('ADDRESS:' + str(self.ARDUINO_ADDRESS))
         
-        data = rightXaxis
-        try:
-            with SMBusWrapper(1) as bus:
-                #Write a block of some bytes to address ...
-                bus.write_byte(address, data) 
-                bus.write_i2c_block_data(address, 0, data)
+        with SMBusWrapper(1) as bus:
+            motorSpeeds = [motor1Speed,indexMotor1Speed, motor2Speed,indexMotor2Speed, motor3Speed,indexMotor3Speed, rightXaxis, indexRightXaxis]
+            bus.write_i2c_block_data(self.ARDUINO_ADDRESS, 0, motorSpeeds)

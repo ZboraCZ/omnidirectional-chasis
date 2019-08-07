@@ -109,8 +109,9 @@ while applicationFinished is False:
     # Go ahead and update the whole screen with what we've drawn.
     pygame.display.flip()
 
-    # Limit to 60 frames per second
-    clock.tick(60)
+    # Limit to 2.6 frames per second | 2.6 IS THE HIGHEST STABLE number
+    # 2.6-cca sleep 384ms mezi loopy, 2.5-sleep 400ms mezi loopy
+    clock.tick(2.6)
 
 # Close the window and quit.
 # If this line forgotten, the program will 'hang' on exit if running from IDLE.

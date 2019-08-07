@@ -72,7 +72,7 @@ while applicationFinished is False:
         ###RIGHT JOYSTICK###
         # ROTATE LEFT ; RIGHT -1.0 ; 1.0 #
         rightXaxis = round(joystick.get_axis(2), 3)
-        # Pocita se s malymi odchylkami, kdyz jsu packy v klidu, at nam nelita podvozek
+        # Pocita se s malymi odchylkami, kdyz jsou packy v klidu, at nam nelita podvozek
         if abs(rightXaxis) < 0.1: rightXaxis=0.0
 
         # Recalculate wrong values, on 1 or -1 and not 0 on the other direction

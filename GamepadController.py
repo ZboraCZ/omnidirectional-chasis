@@ -44,14 +44,16 @@ class GamepadController:
             if leftXaxis == 0: leftXaxis = 0.0000001
             if leftYaxis == 0: leftYaxis = 0.0000001
 
-            # Smer vektoru jizdy => uhel packy... neboli uhel od vodorovne osy x => THETA
+            # Smer vektoru jizdy => uhel packy... neboli uhel od vodorovne osy x v rad => THETA
             direction = math.atan( leftYaxis/leftXaxis )
 
             # Kdyz se jede doleva, uhel vychyleni od osy X se odecita od PI(180°)
             if leftXaxis < 0: direction = math.pi - direction
             # Kdyz se jede doprava, uhel vychyleni od osy X se odecita od nuly(0°)
             # POZNAMKA: Kdyz leftXaxis bylo na zacatku 0, nastavilo se vyse na 0.0000001, tedy spadne do teto vetve
-            elif leftXaxis > 0: direction = 0 - direction
+            elif leftXaxis > 0 and leftYaxis <= 0: direction = 0 - direction
+            
+            elif leftXaxis > 0 and leftYaxis > 0: direction = 2*math.pi - direction
             
             #Vypocet vektoru X a vektoru Y
             vectorX = math.cos(direction) * magnitude

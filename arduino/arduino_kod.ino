@@ -68,6 +68,7 @@ void receiveData(int byteCount) {
     receivedNumber = Wire.read();
     Serial.println(receivedNumber);
     Serial.println(decToBinary(receivedNumber));
+    Serial.println("------------");
         
     switch( nthValue ) {
       //First byte arrived (3 bits: instruction primitive code; 5 bits: first half of middle number)
@@ -86,13 +87,16 @@ void receiveData(int byteCount) {
         break;
     }
   }
-  byte middleNumber = firstHalfMiddleNumber | secondHalfMiddleNumber;
-
+  //OR bit algebra operation: connect 5 bits of first byte and 3 bits of second byte to 1 byte
+  int middleNumber = firstHalfMiddleNumber | secondHalfMiddleNumber;
+  middleNumber = round(middleNumber * CONV_DEG);
+  Serial.println(middleNumber);
   //Now we have all parts we need to rock. Lets Move!
 
+  //========================== ACTION WITH MOTORS ================================
   switch(instructionPrimitiveCode){
     case 7: //or '111' code for 'Go' instruction
-
+      //TODO
       break;
   }
 }
@@ -100,7 +104,6 @@ void receiveData(int byteCount) {
 // function to convert decimal to binary 
 String decToBinary(byte n) 
 { 
-
   String binar = "";
   while(n>0){
     binar = n%2 + binar;

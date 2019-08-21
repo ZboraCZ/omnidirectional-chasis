@@ -21,12 +21,23 @@ try:
       angle -= 360
 
    finalAngle = int(round(angle/CONV_DEG))
-   print("final angle: " +str(finalAngle))
-
-   data = [finalAngle, distance]
+   print("final angle, distance: " +str(finalAngle) + ' ' + str(distance) + ' | ' + bin(finalAngle)[2:]) + ' ' + bin(distance)[2:]
    
-   #bus.write_block_data(ARDUINO_ADDRESS, 1, data) 
-   bus.write_block_data(ARDUINO_ADDRESS, 1, [0b11111111,0b00001010]) 
+   finalAngle = bin(finalAngle)[2:]
+   while (len(finalAngle) < 8): finalAngle = '0' + finalAngle 
+
+   firstBit = '111' + finalAngle[:5]
+   secondBit = finalAngle[5:] + bin(distance)[2:] + '1'
+
+   print('Binary first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
+   
+   firstBit = int(firstBit, 2)
+   secondBit = int(secondBit, 2)
+
+   data = [firstBit, secondBit]
+   print('Sent first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
+   
+   bus.write_block_data(ARDUINO_ADDRESS, 0, data) 
 
 except IndexError:
    print("Angle, distance parameters required")

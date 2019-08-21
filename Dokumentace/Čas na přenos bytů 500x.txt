@@ -1,0 +1,5 @@
+Èas v sekundách za pøenos poètu bytù 500x - v bezpeèném èasovém intervalu se sleepem mezi loopy v co nejkratším vypozorovaném intervalu
+
+1 byte (bezpeèný sleep 0,1s): 50,8s
+2 bajty (bezpeèný sleep 0,14s): 70,9s
+3 bajty (bezpeèný sleep 0,3s): 151,67s

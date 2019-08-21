@@ -1,3 +1,0 @@
-Raspberry posila jednoduche zpravy, vse si handli Arduino.
-Prvni tri bity zpravy je kod zpravy, ktery se vybira switchem v Arduinu.
-

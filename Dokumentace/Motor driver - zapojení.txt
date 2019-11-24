@@ -1,0 +1,7 @@
+Zapojení krokového motoru správným směrem pro kladná čísla - Otáčení na podvozku proti směru hodinových ručiček:
+B2 oražová
+A2 černá
+A1 modrá
+B1 bílá
+
+MS1, MS2,MS3: Připojují se na 5V, pokud chceme měnit full step, 1/8 step nebo 1/16 step podle tabulky

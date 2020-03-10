@@ -147,7 +147,7 @@ void receiveData(int byteCount) {
       }
 
   
-      break; //<- case 7: primitive instruction END.
+      break; //<- case 7: "Go" primitive instruction END.
   } //<- switch(instructionPrimitiveCode) END.
 } //<- void receiveData() END.
 

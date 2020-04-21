@@ -16,23 +16,29 @@ const double CONV_DEG_TO_RAD = 0.01745329251;
 //2nd byte is another 3 bits of angle, 4 bits of number in centimeters, last is Security bit
 int nthValue = 1;
 
-//MOTORS AND WHEELS DECLARATIONS
-//Speed multiplier for all the motors (0: motors don't spin. 1: motors go the fastest possible)
-const double WHEELS_MAGNITUDE = 1; 
+//MOTORS AND WHEELS DECLARATIONS 
 // Diameter of wheels in cm
 const double WHEELS_DIAMETER = 5.5;
 //Wheels circumference in cm (Obvod kola)
-const double WHEELS_CIRCUMFERENCE = WHEELS_DIAMETER * PI;
-//Max rotates per second for AccelSteper library
-const int MAX_RPS = 200;
-//number of steps per revolution for my motors
-const int STEPS_PER_REVOLUTION = 200;
+const double WHEELS_CIRCUMFERENCE = WHEELS_DIAMETER * PI; //=17.27875
+const int CHASIS_CIRCUMFERENCE = round(2 * PI * 20); // =126  20 is chasis radius ending at the center of wheel
+const double CM_ON_ONE_DEGREE_CHASIS_ROTATION = 360/CHASIS_CIRCUMFERENCE;  //=2.857142857;
+const double MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION = CM_ON_ONE_DEGREE_CHASIS_ROTATION/0.04799655442; //=59.5280826202   0.04799655442 is cm per 1 wheel step
+//Max steps per second for AccelSteper library
+const int MAX_SPS = 200;
+
+//Steps multiplier for max. Speed level 16 from RPi into max of 200 SPS
+const int STEP_MULTIPLIER = 12.5;
+
+//Modifier for all Motors speeds multiplications. 
+//Goes to max 200, this is default, if "Go" doesnt go first to set it.
+int speedModifier = 100;
 
 // Define stepper motor connections and motor interface type. Motor interface type must be set to 1 when using a driver:
 #define motorInterfaceType 1
 const int M1_DIR_PIN = 2; const int M1_STEP_PIN = 3;
 const int M2_DIR_PIN = 4; const int M2_STEP_PIN = 5;
-const int M3_DIR_PIN = 6; const int M3_STEP_PIN = 7;
+const int M3_DIR_PIN = 7; const int M3_STEP_PIN = 6;
 
 //##############################################################################
 //####################### MOTOR DECLARATION SECTION ############################
@@ -44,18 +50,19 @@ AccelStepper motor3 = AccelStepper(motorInterfaceType, M3_STEP_PIN, M3_DIR_PIN);
 
 //####################### END OF MOTOR DECLARATION SECTION ############################
 
-// 1° = 0.01745329252 rad
-const float DEG_TO_RAD_MULTIPLIER = 0.01745329252;
-
 void setup() {
   
   pinMode(M1_DIR_PIN, OUTPUT); pinMode(M2_DIR_PIN, OUTPUT);pinMode(M3_DIR_PIN, OUTPUT); 
   pinMode(M1_STEP_PIN, OUTPUT); pinMode(M2_STEP_PIN, OUTPUT); pinMode(M3_STEP_PIN, OUTPUT);
 
+  motor1.setEnablePin(8); m1.enableOutputs(); //opossite m1.disableOutputs() turns off the power to the motor coils, saving power
+  motor2.setEnablePin(12); m1.enableOutputs();
+  motor3.setEnablePin(13); m1.enableOutputs();
+
   //Sets max steps per second to motors. If higher than 1000, Stepper gets inconsistent.
-  motor1.setMaxSpeed(1000); 
-  motor2.setMaxSpeed(1000); 
-  motor3.setMaxSpeed(1000); 
+  motor1.setMaxSpeed(MAX_SPS); 
+  motor2.setMaxSpeed(MAX_SPS); 
+  motor3.setMaxSpeed(MAX_SPS); 
   
   Serial.begin(9600); // start serial for output
   // initialize i2c as slave
@@ -77,9 +84,9 @@ void receiveData(int byteCount) {
   int offsetIndexesOfBytes = byteCount/2; // each offset is for 1 byte... using this int in FOR loop to jump over them as they are starting nums.
   
   byte instructionPrimitiveCode;
-  byte firstHalfMiddleNumber;
-  byte secondHalfMiddleNumber;
-  byte distance;
+  byte firstHalfDegrees;
+  byte secondHalfDegrees;
+  byte speedLevel;
   byte secureBit;
   
   for(int i =0; i<offsetIndexesOfBytes; i++){ //hopping over the starting offset indexes
@@ -96,14 +103,14 @@ void receiveData(int byteCount) {
       //First byte arrived (3 bits: instruction primitive code; 5 bits: first half of middle number)
       case 1: 
         instructionPrimitiveCode = receivedNumber >> 5;
-        firstHalfMiddleNumber = receivedNumber << 3;
+        firstHalfDegrees = receivedNumber << 3;
         nthValue++;
         break; 
 
-      //Second byte arrived (3 bits: second half of middle number; 4 bits: distance measurement [cm], 1 bit: secure bit)
+      //Second byte arrived (3 bits: second half of middle number; 4 bits: speedLevel measurement [cm], 1 bit: secure bit)
       case 2: 
-        secondHalfMiddleNumber = receivedNumber >> 5;
-        distance = receivedNumber << 3; distance = distance >> 4;
+        secondHalfDegrees = receivedNumber >> 5;
+        speedLevel = receivedNumber << 3; speedLevel = speedLevel >> 4;
         secureBit = bitRead(receivedNumber, 0); //2nd parameter is nth position of bit from right
         nthValue = 1;
         break;
@@ -111,43 +118,75 @@ void receiveData(int byteCount) {
   }
   
   //OR bit algebra operation: connect last 5 bits of first byte and first 3 bits of second byte to 1 byte
-  int middleNumber = firstHalfMiddleNumber | secondHalfMiddleNumber;
-  middleNumber = round(middleNumber * CONV_DEGREES);
+  int req_degrees = firstHalfDegrees | secondHalfDegrees;
+  req_degrees = round(req_degrees * CONV_DEGREES);
   //Now we have all parts we need to rock. Lets Move!
   
   //========================== ACTION WITH MOTORS ================================
   switch(instructionPrimitiveCode){
+    
+    //////////////////////////////////////////////////
+      /////////////// Go Forward: 111 //////////////
+    //////////////////////////////////////////////////
+    
     case 7: //or '111' code for 'Go' instruction
+    {
       //Convert degrees to radians to use math functions correctly
-      double receivedAngle = middleNumber * CONV_DEG_TO_RAD;
-      double vectorX = cos(receivedAngle) * WHEELS_MAGNITUDE;
-      double vectorY = sin(receivedAngle) * WHEELS_MAGNITUDE;
+      double receivedAngle = req_degrees * CONV_DEG_TO_RAD;
+      double vectorX = cos(receivedAngle);
+      double vectorY = sin(receivedAngle);
 
-      // How many rotates does the wheel need to spin to get to finish.
-      double rotatesOfWheelsOnDistance = distance / WHEELS_CIRCUMFERENCE;
-      //Calculate RPS for each motor <0,1>
-      double motor1Speed = (-1 * vectorX) * MAX_RPS;
-      double motor2Speed = (0.5 * vectorX + sqrt(3)/2 * vectorY) * MAX_RPS;
-      double motor3Speed = (0.5 * vectorX - sqrt(3)/2 * vectorY) * MAX_RPS;
+      //max speedModifier is rn 200. 12.5*[1 to 16] 
+      if (speedLevel == 0) speedLevel = 1;
+      speedModifier = round(speedLevel * STEP_MULTIPLIER);
+      
+      //Calculate SPS for each motor <0,200>
+      double motor1Speed = (-1 * vectorX) * speedModifier;
+      double motor2Speed = (0.5 * vectorX + sqrt(3)/2 * vectorY) * speedModifier;
+      double motor3Speed = (0.5 * vectorX - sqrt(3)/2 * vectorY) * speedModifier;
 
       //Set speed by RPS for each motor
       motor1.setSpeed(motor1Speed); motor2.setSpeed(motor2Speed); motor3.setSpeed(motor3Speed);
-
-      //TODO: How to determine, that we reached the finish distance
       
-      // Set the current position of motors to 0:
-      motor1.setCurrentPosition(0); motor1.setCurrentPosition(0); motor1.setCurrentPosition(0);
-
-      // Run the motor forward at 200 steps/second until the motor reaches 400 steps (2 revolutions):
-      while(motor1.currentPosition() != 1000)
+      unsigned long startMillis = millis();  //milliseconds timestamp before running motors for timing
+      // Run all motors for 3 seconds
+      while(millis() - startMillis <= 3000)
       {
-        // Setting 200 by default to find out if code works for all motors... Making 5 turns.
-        motor1.setSpeed(MAX_RPS); motor1.setSpeed(MAX_RPS); motor1.setSpeed(MAX_RPS);
         motor1.runSpeed(); motor1.runSpeed(); motor1.runSpeed();
       }
+    } 
+    break; //<- case 7: "Go" primitive instruction END.
 
-  
-      break; //<- case 7: "Go" primitive instruction END.
+    //////////////////////////////////////////////////
+      /////////////// Rotating: 101 ///////////////
+    //////////////////////////////////////////////////
+    
+    case 5: //or '101' code for 'Rotate' instruction
+    {
+      double receivedAngle = req_degrees; 
+      //speedLevel is here 0 or 1. 0 for rotation left(+ motors values), 1 rotation right(- motors values)
+      //rotating left
+      if (speedLevel == 0) { 
+        motor1.moveTo( round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
+        motor2.moveTo(round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
+        motor3.moveTo(round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION));
+        //Set speed for each motor. Max speedModifier is rn 200. 12.5*[1 to 16] 
+        motor1.setSpeed(speedModifier); motor2.setSpeed(speedModifier); motor3.setSpeed(speedModifier);
+      }
+       //rotating right
+      else if (speedLevel == 1){
+        motor1.moveTo(-1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
+        motor2.moveTo(-1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
+        motor3.moveTo(-1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION));
+        //Set speed for each motor
+        motor1.setSpeed(-1*speedModifier); motor2.setSpeed(-1*speedModifier); motor3.setSpeed(-1*speedModifier);
+      }
+      
+      motor1.setCurrentPosition(0); motor2.setCurrentPosition(0); motor3.setCurrentPosition(0);
+      //TO-TEST: DONT KNOW IF RUNS WHOLE TIME (IT SHOULD) OR JUST ONE-STEPS
+      motor1.runSpeedToPosition(); motor1.runSpeedToPosition(); motor1.runSpeedToPosition();
+    }  
+    break; //<- case 5: "Rotate" primitive instruction END.
   } //<- switch(instructionPrimitiveCode) END.
 } //<- void receiveData() END.
 
@@ -161,26 +200,6 @@ String decToBinary(byte n)
   }
   return binar;
 } 
-
-
-// Function to convert binary to decimal
-int binaryToDecimal(String n)
-{
-  String num = n;
-  int dec_value = 0;
-
-  // Initializing base value to 1, i.e 2^0
-  int base = 1;
-
-  int len = num.length();
-  for (int i = len - 1; i >= 0; i--) {
-    if (num[i] == '1')
-      dec_value += base;
-    base = base * 2;
-  }
-
-  return dec_value;
-}
 
 
 //========================== Sending data back to RPi - not working ============================

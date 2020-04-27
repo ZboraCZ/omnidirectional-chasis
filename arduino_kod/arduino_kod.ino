@@ -6,6 +6,8 @@
 // this is the acutal being read number from the I2C bus
 byte receivedNumber = 0;
 
+byte movementCompleted = 0;
+
 //Const for converting 1 byte(max 255) back to 360 degrees sent from RPi
 const double CONV_DEGREES = 1.4117647058823529411764; //MUST MATCH CONST ON RPi for valid nums.
 //Const for converting degrees to radians for math calculations of motor movements
@@ -26,7 +28,6 @@ const double CM_ON_ONE_DEGREE_CHASIS_ROTATION = 360/CHASIS_CIRCUMFERENCE;  //=2.
 const double MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION = CM_ON_ONE_DEGREE_CHASIS_ROTATION/0.04799655442; //=59.5280826202   0.04799655442 is cm per 1 wheel step
 //Max steps per second for AccelSteper library
 const int MAX_SPS = 200;
-
 //Steps multiplier for max. Speed level 16 from RPi into max of 200 SPS
 const int STEP_MULTIPLIER = 12.5;
 
@@ -51,34 +52,45 @@ AccelStepper motor3 = AccelStepper(motorInterfaceType, M3_STEP_PIN, M3_DIR_PIN);
 //####################### END OF MOTOR DECLARATION SECTION ############################
 
 void setup() {
-  
+  ////////CONFIGURING MOTORS//////
   pinMode(M1_DIR_PIN, OUTPUT); pinMode(M2_DIR_PIN, OUTPUT);pinMode(M3_DIR_PIN, OUTPUT); 
   pinMode(M1_STEP_PIN, OUTPUT); pinMode(M2_STEP_PIN, OUTPUT); pinMode(M3_STEP_PIN, OUTPUT);
 
-  motor1.setEnablePin(8); m1.enableOutputs(); //opossite m1.disableOutputs() turns off the power to the motor coils, saving power
-  motor2.setEnablePin(12); m1.enableOutputs();
-  motor3.setEnablePin(13); m1.enableOutputs();
+  //Setting enable pins to be able to turn of powering motors to not burn them down by staying still
+  //Motors are enabled only when they are moving. Otherwise are disabled(powered off)
+  motor1.setEnablePin(8);
+  motor2.setEnablePin(12);
+  motor3.setEnablePin(13); 
+  disableMotorsPower();
 
   //Sets max steps per second to motors. If higher than 1000, Stepper gets inconsistent.
   motor1.setMaxSpeed(MAX_SPS); 
   motor2.setMaxSpeed(MAX_SPS); 
   motor3.setMaxSpeed(MAX_SPS); 
-  
+
+  ////////CONFIGURING I2C COMMUNICATION//////
   Serial.begin(9600); // start serial for output
   // initialize i2c as slave
   Wire.begin(SLAVE_ADDRESS);
 
   // define callbacks for i2c communication
   Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
   
-  Serial.println("Arduino set and ready to rock!");
+  Serial.println("Arduino is set and ready to rock!");
 }
 
 void loop() {
 }
 
-// Process received bytes from RPi to rotate wheels
+
+    //######################################################
+      //########## RECEIVING DATA FROM RPI #############
+    //######################################################
+    
+// Process received bytes from RPi to move
 void receiveData(int byteCount) {
+  movementCompleted = 0;
   Serial.println("-----Receiving data-----");
   
   int offsetIndexesOfBytes = byteCount/2; // each offset is for 1 byte... using this int in FOR loop to jump over them as they are starting nums.
@@ -131,6 +143,8 @@ void receiveData(int byteCount) {
     
     case 7: //or '111' code for 'Go' instruction
     {
+      Serial.println("Started 'GO' instruction");
+      
       //Convert degrees to radians to use math functions correctly
       double receivedAngle = req_degrees * CONV_DEG_TO_RAD;
       double vectorX = cos(receivedAngle);
@@ -150,11 +164,15 @@ void receiveData(int byteCount) {
       
       unsigned long startMillis = millis();  //milliseconds timestamp before running motors for timing
       // Run all motors for 3 seconds
+      enableMotorsPower();
       while(millis() - startMillis <= 3000)
       {
         motor1.runSpeed(); motor1.runSpeed(); motor1.runSpeed();
       }
-    } 
+      disableMotorsPower();
+      
+      Serial.println("Ended 'GO' instruction");
+    }
     break; //<- case 7: "Go" primitive instruction END.
 
     //////////////////////////////////////////////////
@@ -163,6 +181,8 @@ void receiveData(int byteCount) {
     
     case 5: //or '101' code for 'Rotate' instruction
     {
+      Serial.println("Started 'ROTATE' instruction");
+      
       double receivedAngle = req_degrees; 
       //speedLevel is here 0 or 1. 0 for rotation left(+ motors values), 1 rotation right(- motors values)
       //rotating left
@@ -185,12 +205,68 @@ void receiveData(int byteCount) {
       motor1.setCurrentPosition(0); motor2.setCurrentPosition(0); motor3.setCurrentPosition(0);
       //TO-TEST: DONT KNOW IF RUNS WHOLE TIME (IT SHOULD) OR JUST ONE-STEPS
       motor1.runSpeedToPosition(); motor1.runSpeedToPosition(); motor1.runSpeedToPosition();
+      Serial.println("Ended 'ROTATE' instruction");
     }  
     break; //<- case 5: "Rotate" primitive instruction END.
+
+    //////////////////////////////////////////////////
+      /////////////// Braking: 100 ///////////////
+    //////////////////////////////////////////////////
+    // ######## USE CAREFULLY. LONG BRAKE IS GONNA BURN OUT THE MOTORS ##########
+    case 4: //or '100' code for 'Brake' instruction
+    {
+      Serial.println("Started 'BRAKE' instruction");
+      //Just enabling power to stepper motors and not moving them. 
+      //Because they are powered up and holding their position TIGHT
+      enableMotorsPower();
+      Serial.println("Ended 'BRAKE' instruction");
+    }  
+    break; //<- case 4: "Brake" primitive instruction END.
+
+    //////////////////////////////////////////////////
+      /////////////// setSpeed: 001 ///////////////
+    //////////////////////////////////////////////////
+    
+    case 1: //or '001' code for 'setSpeed' instruction
+    {
+      Serial.println("Started 'SETSPEED' instruction");
+      motor1.setSpeed(speedLevel); motor2.setSpeed(speedLevel); motor3.setSpeed(speedLevel);
+      Serial.println("Ended 'SETSPEED' instruction");
+    }  
+    break; //<- case 0: "setSpeed" primitive instruction END.
+
+    //////////////////////////////////////////////////
+      /////////////// Stopping: 000 ///////////////
+    //////////////////////////////////////////////////
+    
+    case 0: //or '000' code for 'Stop' instruction
+    {
+      Serial.println("Started 'STOP' instruction");
+      disableMotorsPower();
+      Serial.println("Ended 'STOP' instruction");
+    }  
+    break; //<- case 0: "Stop" primitive instruction END.
+    
   } //<- switch(instructionPrimitiveCode) END.
+  
+  movementCompleted = 1;
 } //<- void receiveData() END.
 
-// function to convert decimal to binary 
+//Function turns off the power to the motor coils to not burn them, saving power too
+void disableMotorsPower(){
+  motor1.disableOutputs(); 
+  motor2.disableOutputs();
+  motor3.disableOutputs();
+}
+
+//Function turns off the power to the motor coils to not burn them, saving power too
+void enableMotorsPower(){
+  motor1.enableOutputs(); 
+  motor2.enableOutputs();
+  motor3.enableOutputs();
+}
+
+// Maybe for future usage - function to convert decimal to binary 
 String decToBinary(byte n) 
 { 
   String binar = "";
@@ -201,10 +277,10 @@ String decToBinary(byte n)
   return binar;
 } 
 
-
-//========================== Sending data back to RPi - not working ============================
+    //######################################################
+      //####### SENDING REQUESTED DATA TO RPI ##########
+    //######################################################
+    
 void sendData() {
-  //byte output[] = {0x01,0x02,0x03,0x04};  // This is just some sample data for testing
-  byte output[] = {255};
-  Wire.write(output, 4);
+  Wire.write(movementCompleted);
 }

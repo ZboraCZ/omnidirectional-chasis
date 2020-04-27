@@ -33,14 +33,26 @@ try:
    secondBit = finalAngle[5:] + bin(speedLevel) + '1'
 
    print('Binary first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
-   
+
    firstBit = int(firstBit, 2)
    secondBit = int(secondBit, 2)
 
    data = [firstBit, secondBit]
    print('Sent first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
    
-   bus.write_block_data(ARDUINO_ADDRESS, 0, data) 
+   bus.write_block_data(ARDUINO_ADDRESS, 0, data)
+   waitForArduinoCompletion()
 
 except IndexError:
    print("Angle[0-360]; speedLevel[1-16] parameters required")
+
+##### TODO - NÁVRH ČEKÁNÍ NA DOKONČENÍ AKCE NA ARDUINU #####
+def waitForArduinoCompletion():
+	while !isArduinoDone():
+		time.sleep(0.2)
+	print('Script-Info: Arduino completed GO instruction' + str(firstBit) + ' ' + str(secondBit))
+
+def isArduinoDone():
+	number = bus.read_byte(ARDUINO_ADDRESS)
+	# number = bus.read_byte_data(address, 1)
+	return True if number==1 else False

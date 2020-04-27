@@ -8,12 +8,11 @@ Rozvržení bitù po i2c sbìrnici:
 
 Kódy pro identifikaci primitiv na prvních 3 bitech:
 111: go (úhel smìru jízdy - 0° je vpravo, úroveò rychlosti 0-16, paritní bit)
-110: turn (úhel jak moc toèíme dokola, smìr 0=vlevo, 1=vpravo, paritní bit) // úhel 360° opíše kruh, rychlost použita z pøímé jízdy
 101: rotate(úhel o kolik toèíme, smìr 0=vlevo, 1=vpravo, paritní bit) //rychlost použita z pøímé jízdy
 100: brake(ostatní bity zanedbáváme)
 000: stop(ostatní bity zanedbáváme)
 001: setSpeed(bity pro rychlost se berou jako parametr rychlosti 0-16, zbytek se zanedbává)
-
+110: turn ---IN THE FUTURE---(úhel jak moc toèíme dokola, smìr 0=vlevo, 1=vpravo, paritní bit) // úhel 360° opíše kruh, rychlost použita z pøímé jízdy
 
 
 //### Dokumentace z AccelStepper knihovny co je použito v kódu ###

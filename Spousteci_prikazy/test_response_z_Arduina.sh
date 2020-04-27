@@ -32,13 +32,3 @@ while True:
 	print "Arduino: Hey RPI, I received a digit ", number
 	print
 print "End of program"
-
-##### TODO - NÁVRH ČEKÁNÍ NA DOKONČENÍ AKCE NA ARDUINU #####
-def waitForArduinoCompletion():
-	while !isArduinoDone():
-		time.sleep(0.2)
-
-def isArduinoDone():
-	number = bus.read_byte(address)
-	# number = bus.read_byte_data(address, 1)
-	return True if number==1 else False

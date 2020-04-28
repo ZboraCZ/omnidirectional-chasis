@@ -1,10 +1,24 @@
+#List of things to take into Lab
+* Chasis
+* 9V battery
+* Soldering array and the invoice for uni
+* Voltage checker
+* Wireless Keyboard
+* Soldering 
+* Screwdrivers
+
 # TODO list in the lab
 * Take photo of RPi and Arduino for Thesis.
+* Build again just i2c comm Arduino-RPi
+	* Make all new scripts bash executables: chmod a+x /path/to/file or chmod 777 /path/to/file
+	* TOTEST: Response scripts from Arduino back to Raspberry Pi (new waiting method in RPi scripts)
+	* Test all Instruction primitives
+	* Try running the SQUARE combined instruction
+* Try to build complete chasis with all motors on non-soldering array, try to USE ALL 3 100uF transistors from Arduino set
 * Take photo of complete chasis build for Thesis.
-* Test of response scripts from Arduino back to Raspberry Pi (new waiting method in RPi script)
-* Test all Instruction primitives
-* Build Up the chasis
-* Take video of the chasis moving
+* Take video of the chasis move.
+	* Make a square move anticlockwise, rotate 360 left, then 360 right. Go the square back clockwise.
+* Try build the chasis with all motors on soldering array, try to USE ALL 3 100uF transistors from Arduino set if worked
 * LETS ROLL!
 
 # Bachelor thesis: Design and control of omnidirectional chasis.

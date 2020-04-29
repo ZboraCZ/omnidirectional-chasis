@@ -1,3 +1,7 @@
+#TO-TRY!!
+Arduino cant handle timing functions in receiveData function
+Create another function outside to return millis() time!
+
 #List of things to take into Lab
 * Chasis
 * 9V battery

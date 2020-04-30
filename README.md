@@ -1,6 +1,10 @@
 #ToTRY!!!
 Arduino cant handle timing functions in receive data functions
 TO-TRY: Create another function outside to return millis() time!
+=======
+#TO-TRY!!
+Arduino cant handle timing functions in receiveData function
+Create another function outside to return millis() time!
 
 #List of things to take into Lab
 * Chasis

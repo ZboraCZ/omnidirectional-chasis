@@ -27,13 +27,13 @@ const int CHASIS_CIRCUMFERENCE = round(2 * PI * 20); // =126  20 is chasis radiu
 const double CM_ON_ONE_DEGREE_CHASIS_ROTATION = 360/CHASIS_CIRCUMFERENCE;  //=2.857142857;
 const double MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION = CM_ON_ONE_DEGREE_CHASIS_ROTATION/0.04799655442; //=59.5280826202   0.04799655442 is cm per 1 wheel step
 //Max steps per second for AccelSteper library
-const int MAX_SPS = 200;
-//Steps multiplier for max. Speed level 16 from RPi into max of 200 SPS
-const int STEP_MULTIPLIER = 12.5;
+const int MAX_SPS = 450;
+//Steps multiplier for max. speed level 15 from RPi into max of 450 SPS
+const int STEP_MULTIPLIER = 30;
 
 //Modifier for all Motors speeds multiplications. 
-//Goes to max 200, this is default, if "Go" doesnt go first to set it.
-int speedModifier = 100;
+//Goes to max 450, this is default, if "Go" doesnt go first to set it.
+int speedModifier = 200;
 
 // Define stepper motor connections and motor interface type. Motor interface type must be set to 1 when using a driver:
 #define motorInterfaceType 1
@@ -52,10 +52,7 @@ AccelStepper motor3 = AccelStepper(motorInterfaceType, M3_STEP_PIN, M3_DIR_PIN);
 //####################### END OF MOTOR DECLARATION SECTION ############################
 
 void setup() {
-  ////////CONFIGURING MOTORS//////
-  pinMode(M1_DIR_PIN, OUTPUT); pinMode(M2_DIR_PIN, OUTPUT);pinMode(M3_DIR_PIN, OUTPUT); 
-  pinMode(M1_STEP_PIN, OUTPUT); pinMode(M2_STEP_PIN, OUTPUT); pinMode(M3_STEP_PIN, OUTPUT);
-
+  
   //Setting enable pins to be able to turn of powering motors to not burn them down by staying still
   //Motors are enabled only when they are moving. Otherwise are disabled(powered off)
   motor1.setEnablePin(8);
@@ -100,17 +97,22 @@ void receiveData(int byteCount) {
   byte secondHalfDegrees;
   byte speedLevel;
   byte secureBit;
-  
+  /* Debugging 
+  for(int i =0; i<=byteCount; i++){ //hopping over the starting offset indexes
+      receivedNumber = Wire.read();
+      Serial.println(byteCount);
+      Serial.println(receivedNumber);
+      Serial.println("%%%%%%%%%%%");
+    }
+    */
   for(int i =0; i<offsetIndexesOfBytes; i++){ //hopping over the starting offset indexes
       receivedNumber = Wire.read();
     }
+    
   nthValue = 1;
   while (Wire.available()) {
     receivedNumber = Wire.read();
-    Serial.println(receivedNumber);
-    Serial.println(decToBinary(receivedNumber));
-    Serial.println("------------");
-        
+            
     switch( nthValue ) {
       //First byte arrived (3 bits: instruction primitive code; 5 bits: first half of middle number)
       case 1: 
@@ -123,15 +125,23 @@ void receiveData(int byteCount) {
       case 2: 
         secondHalfDegrees = receivedNumber >> 5;
         speedLevel = receivedNumber << 3; speedLevel = speedLevel >> 4;
+        Serial.println(speedLevel);
         secureBit = bitRead(receivedNumber, 0); //2nd parameter is nth position of bit from right
         nthValue = 1;
+        Serial.println("Case 2 completed");
         break;
     }
   }
-  
+
   //OR bit algebra operation: connect last 5 bits of first byte and first 3 bits of second byte to 1 byte
-  int req_degrees = firstHalfDegrees | secondHalfDegrees;
-  req_degrees = round(req_degrees * CONV_DEGREES);
+  double receivedAngle = firstHalfDegrees | secondHalfDegrees;
+  receivedAngle = round(receivedAngle * CONV_DEGREES);
+  speedModifier = round(speedLevel * STEP_MULTIPLIER);
+
+  Serial.println(instructionPrimitiveCode);
+  Serial.println(receivedAngle);
+  Serial.println(instructionPrimitiveCode);
+
   //Now we have all parts we need to rock. Lets Move!
   
   //========================== ACTION WITH MOTORS ================================
@@ -146,28 +156,28 @@ void receiveData(int byteCount) {
       Serial.println("Started 'GO' instruction");
       
       //Convert degrees to radians to use math functions correctly
-      double receivedAngle = req_degrees * CONV_DEG_TO_RAD;
+      receivedAngle = receivedAngle * CONV_DEG_TO_RAD;
       double vectorX = cos(receivedAngle);
       double vectorY = sin(receivedAngle);
-
-      //max speedModifier is rn 200. 12.5*[1 to 16] 
+ 
       if (speedLevel == 0) speedLevel = 1;
-      speedModifier = round(speedLevel * STEP_MULTIPLIER);
       
-      //Calculate SPS for each motor <0,200>
+      //Calculate SPS for each motor <0,450>
       double motor1Speed = (-1 * vectorX) * speedModifier;
       double motor2Speed = (0.5 * vectorX + sqrt(3)/2 * vectorY) * speedModifier;
       double motor3Speed = (0.5 * vectorX - sqrt(3)/2 * vectorY) * speedModifier;
 
       //Set speed by RPS for each motor
       motor1.setSpeed(motor1Speed); motor2.setSpeed(motor2Speed); motor3.setSpeed(motor3Speed);
-      
-      unsigned long startMillis = millis();  //milliseconds timestamp before running motors for timing
+            
       // Run all motors for 3 seconds
       enableMotorsPower();
-      while(millis() - startMillis <= 3000)
+      int i=0;
+      while(i<3000)
       {
-        motor1.runSpeed(); motor1.runSpeed(); motor1.runSpeed();
+        motor1.runSpeed(); motor2.runSpeed(); motor3.runSpeed();
+        i++;
+        delay(1);
       }
       disableMotorsPower();
       
@@ -182,29 +192,28 @@ void receiveData(int byteCount) {
     case 5: //or '101' code for 'Rotate' instruction
     {
       Serial.println("Started 'ROTATE' instruction");
-      
-      double receivedAngle = req_degrees; 
+       
       //speedLevel is here 0 or 1. 0 for rotation left(+ motors values), 1 rotation right(- motors values)
       //rotating left
       if (speedLevel == 0) { 
-        motor1.moveTo( round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
-        motor2.moveTo(round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
-        motor3.moveTo(round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION));
-        //Set speed for each motor. Max speedModifier is rn 200. 12.5*[1 to 16] 
+        int finishAngle =  round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION); 
         motor1.setSpeed(speedModifier); motor2.setSpeed(speedModifier); motor3.setSpeed(speedModifier);
       }
        //rotating right
       else if (speedLevel == 1){
-        motor1.moveTo(-1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
-        motor2.moveTo(-1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION)); 
-        motor3.moveTo(-1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION));
-        //Set speed for each motor
+        int finishAngle = -1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION); 
         motor1.setSpeed(-1*speedModifier); motor2.setSpeed(-1*speedModifier); motor3.setSpeed(-1*speedModifier);
       }
       
       motor1.setCurrentPosition(0); motor2.setCurrentPosition(0); motor3.setCurrentPosition(0);
-      //TO-TEST: DONT KNOW IF RUNS WHOLE TIME (IT SHOULD) OR JUST ONE-STEPS
-      motor1.runSpeedToPosition(); motor1.runSpeedToPosition(); motor1.runSpeedToPosition();
+      enableMotorsPower();
+      // Running motors. Controlling just motor1 position, because they all run the same
+      while(motor1.currentPosition() != finishAngle){
+        motor1.runSpeed(); motor2.runSpeed(); motor3.runSpeed();
+        delay(1);
+      }
+      disableMotorsPower();
+      
       Serial.println("Ended 'ROTATE' instruction");
     }  
     break; //<- case 5: "Rotate" primitive instruction END.
@@ -230,7 +239,7 @@ void receiveData(int byteCount) {
     case 1: //or '001' code for 'setSpeed' instruction
     {
       Serial.println("Started 'SETSPEED' instruction");
-      motor1.setSpeed(speedLevel); motor2.setSpeed(speedLevel); motor3.setSpeed(speedLevel);
+      motor1.setSpeed(speedModifier); motor2.setSpeed(speedModifier); motor3.setSpeed(speedModifier);
       Serial.println("Ended 'SETSPEED' instruction");
     }  
     break; //<- case 0: "setSpeed" primitive instruction END.
@@ -252,29 +261,36 @@ void receiveData(int byteCount) {
   movementCompleted = 1;
 } //<- void receiveData() END.
 
-//Function turns off the power to the motor coils to not burn them, saving power too
+//Actually the AccelStepper library has like inverted functions for enable/disable motors usage
+//AccelStepper::motor1.enableOutputs() actually disables, disableOutputs() enables... funny huh?
+//Function turns OFF the power to the motor coils to not burn them, saving power too
 void disableMotorsPower(){
-  motor1.disableOutputs(); 
-  motor2.disableOutputs();
-  motor3.disableOutputs();
-}
-
-//Function turns off the power to the motor coils to not burn them, saving power too
-void enableMotorsPower(){
   motor1.enableOutputs(); 
   motor2.enableOutputs();
   motor3.enableOutputs();
 }
 
+//Function turns ON the power to the motor coils to not burn them, saving power too
+void enableMotorsPower(){
+  motor1.disableOutputs(); 
+  motor2.disableOutputs();
+  motor3.disableOutputs();
+}
+
 // Maybe for future usage - function to convert decimal to binary 
 String decToBinary(byte n) 
 { 
-  String binar = "";
-  while(n>0){
-    binar = n%2 + binar;
-    n = n/2;  
+  if(n==0){
+    return "0";  
   }
-  return binar;
+  else{
+    String binar = "";
+    while(n>0){
+      binar = n%2 + binar;
+      n = n/2;  
+    }
+    return binar;
+  }
 } 
 
     //######################################################

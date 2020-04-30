@@ -1,3 +1,7 @@
+#ToTRY!!!
+Arduino cant handle timing functions in receive data functions
+TO-TRY: Create another function outside to return millis() time!
+
 #List of things to take into Lab
 * Chasis
 * 9V battery
@@ -7,7 +11,11 @@
 * Soldering 
 * Screwdrivers
 
-# TODO list in the lab
+# TODO list
+* Max speed is 450. Needs to be replaced in codes from 200
+* AND ITS TO 15 NOT 16 ON 4 BITS FFS WHAT AN IDIOT I AM
+* AND THE CONSTANT FOR MODIFYING THE SPEED IS 30 YOU IDIOT
+* disableOutputs enables to Arduino using motors. Its like negative
 * Take photo of RPi and Arduino for Thesis.
 * Build again just i2c comm Arduino-RPi
 	* Make all new scripts bash executables: chmod a+x /path/to/file or chmod 777 /path/to/file

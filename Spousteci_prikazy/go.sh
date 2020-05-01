@@ -37,14 +37,28 @@ def isArduinoDone():
 	# number = bus.read_byte_data(address, 1)
 	return True if number==1 else False
 
+def checkSpeedLevel(speedLevel):
+	if speedLevel < 0:
+		return 0
+	elif speedLevel > 15:
+		return 15
+
+def checkAngle(angle):
+	while angle > 360:
+      		angle -= 360
+	while angle < 0:
+      		angle += 360
+
 ################# START OF THE PROGRAM ######################
 
 try:
    angle = int(sys.argv[1])      #uhel jizdy ve stupnich [0-360]
-   speedLevel = int(sys.argv[2])   #Uroven rychlosti [1-16]
-   
-   while angle > 360:
-      angle -= 360
+   speedLevel = int(sys.argv[2])   #Uroven rychlosti [0-15]
+
+   #Making sure we are in 0-360 angle radius
+   checkAngle(angle)
+   #Making sure we are in 0-15 radius
+   speedLevel = checkSpeedLevel(speedLevel)
 
    finalAngle = int(round(angle/CONV_DEG)) #max. 255
 
@@ -55,7 +69,6 @@ try:
 
    firstBit = '111' + finalAngle[:5]
    secondBit = finalAngle[5:] + speedLevel + '1'
-   print(finalAngle[5:])
 
    print('Binary first bit, second bit: ' + firstBit + ' ' + secondBit)
 
@@ -68,5 +81,5 @@ try:
    #waitForArduinoCompletion()
 
 except IndexError:
-   print("Angle 0-360 speedLevel 1-16 parameters required")
+   print("Parameters required: Angle 0-360; speedLevel 0-15")
 

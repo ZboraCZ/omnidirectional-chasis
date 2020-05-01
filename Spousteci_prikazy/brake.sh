@@ -9,18 +9,42 @@ ARDUINO_ADDRESS = 0x04
 
 bus = smbus.SMBus(1)
 
+def decToBinary(decNumber, numBinPlaces):
+	if decNumber == 0: 
+		binaryNum = "0"
+	else:
+		binaryNum = ""
+ 		while decNumber>0:
+    			binaryNum = str(decNumber%2) + binaryNum
+    			decNumber = decNumber/2
+  
+	while len(binaryNum) < numBinPlaces:
+		binaryNum = '0' + binaryNum
+  	return binaryNum
+
+# TODO - NAVRH CEKANI NA DOKONCENI AKCE NA ARDUINU #####
+def waitForArduinoCompletion():
+	time.sleep(10)
+	while not isArduinoDone():
+		time.sleep(10)
+	print('Script-Info: Arduino completed GO instruction' + str(firstBit) + ' ' + str(secondBit))
+
+def isArduinoDone():
+	number = bus.read_byte(ARDUINO_ADDRESS)
+	# number = bus.read_byte_data(address, 1)
+	return True if number==1 else False
+
+################# START OF THE PROGRAM ######################
+
 try:
    finalAngle = 0 #max. 255
    speedLevel = 0
 
-   finalAngle = bin(finalAngle)
-   speedLevel = bin(speedLevel)
-
-   while (len(finalAngle) < 8): finalAngle = '0' + finalAngle #Add up zeros to 255 in binary
-   while (len(speedLevel) < 4): speedLevel = '0' + speedLevel #Add up zeros to 16 in binary
+   finalAngle = decToBinary(finalAngle, 8)
+   speedLevel = decToBinary(speedLevel, 4)
 
    firstBit = '100' + finalAngle[:5]
-   secondBit = finalAngle[5:] + bin(speedLevel) + '1'
+   secondBit = finalAngle[5:] + speedLevel + '1'
 
    print('Binary first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
 
@@ -28,21 +52,8 @@ try:
    secondBit = int(secondBit, 2)
 
    data = [firstBit, secondBit]
-   print('Sent first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
 
    bus.write_block_data(ARDUINO_ADDRESS, 0, data)
-   waitForArduinoCompletion()
+   #waitForArduinoCompletion()
 
-except IndexError:
-   print("Angle[0-360]; speedLevel[1-16] parameters required")
 
-##### TODO - NÁVRH ČEKÁNÍ NA DOKONČENÍ AKCE NA ARDUINU #####
-def waitForArduinoCompletion():
-	while !isArduinoDone():
-		time.sleep(0.2)
-	print('Script-Info: Arduino completed BRAKE instruction' + str(firstBit) + ' ' + str(secondBit))
-
-def isArduinoDone():
-	number = bus.read_byte(ARDUINO_ADDRESS)
-	# number = bus.read_byte_data(address, 1)
-	return True if number==1 else False

@@ -4,21 +4,21 @@
 print("Started SQUARE combined instruction")
 
 #Going square anticlockwise
-./go.sh 90 16
-./go.sh 180 16
-./go.sh 270 16
-./go.sh 0 16
+python go.sh 90 16
+python go.sh 180 16
+python go.sh 270 16
+python go.sh 0 16
 
 #Rotating 360 left
-./rotate.sh 360 0
+python rotate.sh 360 0
 
 #Rotating 360 right
-./rotate.sh 360 1
+python rotate.sh 360 1
 
 #Going square clockwise
-./go.sh 90 16
-./go.sh 0 16
-./go.sh 270 16
-./go.sh 180 16
+python go.sh 90 16
+python go.sh 0 16
+python go.sh 270 16
+python go.sh 180 16
 
 print("Ended SQUARE combined instruction")

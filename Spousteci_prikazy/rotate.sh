@@ -42,7 +42,8 @@ def checkRotationDirection(rotationDirection):
 		return 0
 	elif rotationDirection > 1:
 		return 1
-	else return rotationDirection
+	else:
+		return rotationDirection
 
 def checkAngle(angle):
 	while angle > 360:

@@ -42,6 +42,7 @@ def checkSpeedLevel(speedLevel):
 		return 0
 	elif speedLevel > 15:
 		return 15
+	else return speedLevel
 ################# START OF THE PROGRAM ######################
 
 try:

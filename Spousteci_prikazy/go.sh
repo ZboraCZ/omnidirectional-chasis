@@ -27,10 +27,11 @@ def decToBinary(decNumber, numBinPlaces):
 
 # TODO - NAVRH CEKANI NA DOKONCENI AKCE NA ARDUINU #####
 def waitForArduinoCompletion():
-	time.sleep(10)
+	time.sleep(3.2)
 	while not isArduinoDone():
-		time.sleep(10)
-	print('Script-Info: Arduino completed GO instruction' + str(firstBit) + ' ' + str(secondBit))
+		print("Arduino still not done")
+		time.sleep(3.2)
+	print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
 
 def isArduinoDone():
 	number = bus.read_byte(ARDUINO_ADDRESS)
@@ -54,6 +55,9 @@ def checkAngle(angle):
 ################# START OF THE PROGRAM ######################
 
 try:
+   print("=====================")
+   print("Running GO command")
+
    angle = int(sys.argv[1])      #uhel jizdy ve stupnich [0-360]
    speedLevel = int(sys.argv[2])   #Uroven rychlosti [0-15]
 
@@ -80,7 +84,7 @@ try:
    data = [firstBit, secondBit]
    
    bus.write_block_data(ARDUINO_ADDRESS, 0, data)
-   #waitForArduinoCompletion()
+   waitForArduinoCompletion()
 
 except IndexError:
    print("Parameters required: Angle 0-360; speedLevel 0-15")

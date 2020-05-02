@@ -27,10 +27,10 @@ def decToBinary(decNumber, numBinPlaces):
 
 # TODO - NAVRH CEKANI NA DOKONCENI AKCE NA ARDUINU #####
 def waitForArduinoCompletion():
-	time.sleep(10)
+	time.sleep(1.5)
 	while not isArduinoDone():
-		time.sleep(10)
-	print('Script-Info: Arduino completed GO instruction' + str(firstBit) + ' ' + str(secondBit))
+		time.sleep(1.5)
+	print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
 
 def isArduinoDone():
 	number = bus.read_byte(ARDUINO_ADDRESS)
@@ -48,13 +48,16 @@ def checkSpeedLevel(speedLevel):
 ################# START OF THE PROGRAM ######################
 
 try:
+   print("=====================")
+   print("Running SETSPEED command")
+
    speedLevel = int(sys.argv[1])  #Uroven rychlosti [1-15]
    finalAngle = 0 #max. 255
 
    #Making sure we are in 0-15 radius
    speedLevel = checkSpeedLevel(speedLevel)
 
-   print("final angle, speedLevel: " +str(finalAngle) + ' ' + str(speedLevel) + ' | ' + bin(finalAngle) + ' ' + bin(speedLevel))
+   print("final angle, speedLevel: " +str(finalAngle) + ' ' + str(speedLevel) + ' | ' + decToBinary(finalAngle, 8) + ' ' + decToBinary(speedLevel, 4))
 
    finalAngle = decToBinary(finalAngle, 8)
    speedLevel = decToBinary(speedLevel, 4)
@@ -62,7 +65,7 @@ try:
    firstBit = '001' + finalAngle[:5]
    secondBit = finalAngle[5:] + speedLevel + '1'
 
-   print('Binary first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
+   print('Binary first bit, second bit: ' + firstBit + ' ' + secondBit)
 
    firstBit = int(firstBit, 2)
    secondBit = int(secondBit, 2)
@@ -70,8 +73,8 @@ try:
    data = [firstBit, secondBit]
 
    bus.write_block_data(ARDUINO_ADDRESS, 0, data)
-   #waitForArduinoCompletion()
+   waitForArduinoCompletion()
 
 except IndexError:
-   print("Parameter required: speedLevel: 0-15")
+   print("Something went wrong")
 

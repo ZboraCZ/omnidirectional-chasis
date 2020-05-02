@@ -24,10 +24,10 @@ def decToBinary(decNumber, numBinPlaces):
 
 # TODO - NAVRH CEKANI NA DOKONCENI AKCE NA ARDUINU #####
 def waitForArduinoCompletion():
-	time.sleep(10)
+	time.sleep(3)
 	while not isArduinoDone():
-		time.sleep(10)
-	print('Script-Info: Arduino completed GO instruction' + str(firstBit) + ' ' + str(secondBit))
+		time.sleep(1.5)
+	print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
 
 def isArduinoDone():
 	number = bus.read_byte(ARDUINO_ADDRESS)
@@ -37,6 +37,9 @@ def isArduinoDone():
 ################# START OF THE PROGRAM ######################
 
 try:
+   print("=====================")
+   print("Running STOP command")
+
    finalAngle = 0 #max. 255
    speedLevel = 0
 
@@ -44,7 +47,7 @@ try:
    speedLevel = decToBinary(speedLevel, 4)
 
    firstBit = '000' + finalAngle[:5]
-   secondBit = finalAngle[5:] + bin(speedLevel) + '1'
+   secondBit = finalAngle[5:] + speedLevel + '1'
 
    print('Binary first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
 
@@ -54,5 +57,7 @@ try:
    data = [firstBit, secondBit]
 
    bus.write_block_data(ARDUINO_ADDRESS, 0, data)
-   #waitForArduinoCompletion()
+   waitForArduinoCompletion()
 
+except IndexError:
+   print("Something went wrong")

@@ -27,10 +27,10 @@ def decToBinary(decNumber, numBinPlaces):
 
 # TODO - NAVRH CEKANI NA DOKONCENI AKCE NA ARDUINU #####
 def waitForArduinoCompletion():
-	time.sleep(10)
+	time.sleep(6.2)
 	while not isArduinoDone():
-		time.sleep(10)
-	print('Script-Info: Arduino completed GO instruction' + str(firstBit) + ' ' + str(secondBit))
+		time.sleep(6.2)
+	print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
 
 def isArduinoDone():
 	number = bus.read_byte(ARDUINO_ADDRESS)
@@ -54,6 +54,9 @@ def checkAngle(angle):
 ################# START OF THE PROGRAM ######################
 
 try:
+   print("=====================")
+   print("Running ROTATE command")
+
    angle = int(sys.argv[1])      #uhel jizdy ve stupnich [0-360]
    rotationDirection = int(sys.argv[2])   #Smer rotace 0=vlevo, 1=vpravo
 
@@ -72,7 +75,7 @@ try:
    firstBit = '101' + finalAngle[:5]
    secondBit = finalAngle[5:] + rotationDirection + '1'
 
-   print('Binary first bit, second bit: ' + str(firstBit) + ' ' + str(secondBit))
+   print('Binary first bit, second bit: ' + firstBit + ' ' + secondBit)
    
    firstBit = int(firstBit, 2)
    secondBit = int(secondBit, 2)
@@ -80,7 +83,7 @@ try:
    data = [firstBit, secondBit]
    
    bus.write_block_data(ARDUINO_ADDRESS, 0, data)
-   #waitForArduinoCompletion()
+   waitForArduinoCompletion()
 
 except IndexError:
    print("Angle[0-360]; rotationDirection[0=left, 1=right] parameters required")

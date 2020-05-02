@@ -73,8 +73,6 @@ void setup() {
   // define callbacks for i2c communication
   Wire.onReceive(receiveData);
   Wire.onRequest(sendData);
-  
-  Serial.println("Arduino is set and ready to rock!");
 }
 
 void loop() {
@@ -88,7 +86,7 @@ void loop() {
 // Process received bytes from RPi to move
 void receiveData(int byteCount) {
   movementCompleted = 0;
-  Serial.println("-----Receiving data-----");
+  //Serial.println("-----Receiving data-----");
   
   int offsetIndexesOfBytes = byteCount/2; // each offset is for 1 byte... using this int in FOR loop to jump over them as they are starting nums.
   
@@ -97,12 +95,14 @@ void receiveData(int byteCount) {
   byte secondHalfDegrees;
   byte speedLevel;
   byte secureBit;
-  /* Debugging 
+  /* Debugging
   for(int i =0; i<=byteCount; i++){ //hopping over the starting offset indexes
       receivedNumber = Wire.read();
+      /*
       Serial.println(byteCount);
       Serial.println(receivedNumber);
       Serial.println("%%%%%%%%%%%");
+      
     }
     */
   for(int i =0; i<offsetIndexesOfBytes; i++){ //hopping over the starting offset indexes
@@ -112,7 +112,7 @@ void receiveData(int byteCount) {
   nthValue = 1;
   while (Wire.available()) {
     receivedNumber = Wire.read();
-            
+
     switch( nthValue ) {
       //First byte arrived (3 bits: instruction primitive code; 5 bits: first half of middle number)
       case 1: 
@@ -125,7 +125,6 @@ void receiveData(int byteCount) {
       case 2: 
         secondHalfDegrees = receivedNumber >> 5;
         speedLevel = receivedNumber << 3; speedLevel = speedLevel >> 4;
-        Serial.println(speedLevel);
         secureBit = bitRead(receivedNumber, 0); //2nd parameter is nth position of bit from right
         nthValue = 1;
         break;
@@ -137,10 +136,6 @@ void receiveData(int byteCount) {
   receivedAngle = round(receivedAngle * CONV_DEGREES);
   speedModifier = round(speedLevel * STEP_MULTIPLIER);
 
-  Serial.println(instructionPrimitiveCode);
-  Serial.println(receivedAngle);
-  Serial.println(speedModifier);
-
   //Now we have all parts we need to rock. Lets Move!
   
   //========================== ACTION WITH MOTORS ================================
@@ -151,9 +146,7 @@ void receiveData(int byteCount) {
     //////////////////////////////////////////////////
     
     case 7: //or '111' code for 'Go' instruction
-    {
-      Serial.println("Started 'GO' instruction");
-      
+    {      
       //Convert degrees to radians to use math functions correctly
       receivedAngle = receivedAngle * CONV_DEG_TO_RAD;
       double vectorX = cos(receivedAngle);
@@ -178,9 +171,7 @@ void receiveData(int byteCount) {
         i++;
         delay(1);
       }
-      disableMotorsPower();
-      
-      Serial.println("Ended 'GO' instruction");
+      disableMotorsPower();      
     }
     break; //<- case 7: "Go" primitive instruction END.
 
@@ -190,7 +181,6 @@ void receiveData(int byteCount) {
     
     case 5: //or '101' code for 'Rotate' instruction
     {
-      Serial.println("Started 'ROTATE' instruction");
       //speedLevel is here 0 or 1. 0 for rotation left(+ motors values), 1 rotation right(- motors values)
       //rotating left
       if (speedLevel == 0) { 
@@ -210,9 +200,7 @@ void receiveData(int byteCount) {
         motor1.runSpeed(); motor2.runSpeed(); motor3.runSpeed();
         delay(1);
       }
-      disableMotorsPower();
-      
-      Serial.println("Ended 'ROTATE' instruction");
+      disableMotorsPower();      
     }  
     break; //<- case 5: "Rotate" primitive instruction END.
 
@@ -222,11 +210,9 @@ void receiveData(int byteCount) {
     // ######## USE CAREFULLY. LONG BRAKE IS GONNA BURN OUT THE MOTORS ##########
     case 4: //or '100' code for 'Brake' instruction
     {
-      Serial.println("Started 'BRAKE' instruction");
       //Just enabling power to stepper motors and not moving them. 
       //Because they are powered up and holding their position TIGHT
       enableMotorsPower();
-      Serial.println("Ended 'BRAKE' instruction");
     }  
     break; //<- case 4: "Brake" primitive instruction END.
 
@@ -236,9 +222,7 @@ void receiveData(int byteCount) {
     
     case 1: //or '001' code for 'setSpeed' instruction
     {
-      Serial.println("Started 'SETSPEED' instruction");
       motor1.setSpeed(speedModifier); motor2.setSpeed(speedModifier); motor3.setSpeed(speedModifier);
-      Serial.println("Ended 'SETSPEED' instruction");
     }  
     break; //<- case 0: "setSpeed" primitive instruction END.
 
@@ -248,9 +232,7 @@ void receiveData(int byteCount) {
     
     case 0: //or '000' code for 'Stop' instruction
     {
-      Serial.println("Started 'STOP' instruction");
       disableMotorsPower();
-      Serial.println("Ended 'STOP' instruction");
     }  
     break; //<- case 0: "Stop" primitive instruction END.
     

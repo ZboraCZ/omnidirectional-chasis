@@ -128,7 +128,6 @@ void receiveData(int byteCount) {
         Serial.println(speedLevel);
         secureBit = bitRead(receivedNumber, 0); //2nd parameter is nth position of bit from right
         nthValue = 1;
-        Serial.println("Case 2 completed");
         break;
     }
   }
@@ -140,7 +139,7 @@ void receiveData(int byteCount) {
 
   Serial.println(instructionPrimitiveCode);
   Serial.println(receivedAngle);
-  Serial.println(instructionPrimitiveCode);
+  Serial.println(speedModifier);
 
   //Now we have all parts we need to rock. Lets Move!
   
@@ -192,23 +191,22 @@ void receiveData(int byteCount) {
     case 5: //or '101' code for 'Rotate' instruction
     {
       Serial.println("Started 'ROTATE' instruction");
-       
       //speedLevel is here 0 or 1. 0 for rotation left(+ motors values), 1 rotation right(- motors values)
       //rotating left
       if (speedLevel == 0) { 
-        int finishAngle =  round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION); 
+        receivedAngle =  round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION); 
         motor1.setSpeed(speedModifier); motor2.setSpeed(speedModifier); motor3.setSpeed(speedModifier);
       }
        //rotating right
       else if (speedLevel == 1){
-        int finishAngle = -1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION); 
+        receivedAngle = -1*round(receivedAngle * MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION); 
         motor1.setSpeed(-1*speedModifier); motor2.setSpeed(-1*speedModifier); motor3.setSpeed(-1*speedModifier);
       }
       
       motor1.setCurrentPosition(0); motor2.setCurrentPosition(0); motor3.setCurrentPosition(0);
       enableMotorsPower();
       // Running motors. Controlling just motor1 position, because they all run the same
-      while(motor1.currentPosition() != finishAngle){
+      while(motor1.currentPosition() != receivedAngle){
         motor1.runSpeed(); motor2.runSpeed(); motor3.runSpeed();
         delay(1);
       }

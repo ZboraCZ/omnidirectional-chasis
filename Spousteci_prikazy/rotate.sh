@@ -64,7 +64,7 @@ try:
 
    finalAngle = int(round(angle/CONV_DEG)) #max. 255
 
-   print("final angle, rotationDirection: " +str(finalAngle) + ' ' + str(rotationDirection) + ' | ' + bin(finalAngle) + ' ' + bin(rotationDirection))
+   print("final angle, rotationDirection: " +str(finalAngle) + ' ' + str(rotationDirection) + ' | ' + decToBinary(finalAngle, 8) + ' ' + decToBinary(rotationDirection, 4))
    
    finalAngle = decToBinary(finalAngle, 8)
    rotationDirection = decToBinary(rotationDirection, 4)

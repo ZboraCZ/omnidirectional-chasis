@@ -147,6 +147,8 @@ void receiveData(int byteCount) {
     
     case 7: //or '111' code for 'Go' instruction
     {      
+            //Serial.println(receivedAngle);
+
       //Convert degrees to radians to use math functions correctly
       receivedAngle = receivedAngle * CONV_DEG_TO_RAD;
       double vectorX = cos(receivedAngle);
@@ -158,20 +160,24 @@ void receiveData(int byteCount) {
       double motor1Speed = (-1 * vectorX) * speedModifier;
       double motor2Speed = (0.5 * vectorX + sqrt(3)/2 * vectorY) * speedModifier;
       double motor3Speed = (0.5 * vectorX - sqrt(3)/2 * vectorY) * speedModifier;
-
+      enableMotorsPower();
       //Set speed by RPS for each motor
+      Serial.println(motor1Speed);
+      Serial.println(motor2Speed);
+      Serial.println(motor3Speed);
+
       motor1.setSpeed(motor1Speed); motor2.setSpeed(motor2Speed); motor3.setSpeed(motor3Speed);
             
-      // Run all motors for 3 seconds
-      enableMotorsPower();
+      // Run all motors for 3 seconds      
       int i=0;
       while(i<3000)
       {
-        motor1.runSpeed(); motor2.runSpeed(); motor3.runSpeed();
+        motor1.runSpeed(); //motor2.runSpeed(); motor3.runSpeed();
         i++;
         delay(1);
       }
-      disableMotorsPower();      
+      disableMotorsPower();  
+      Serial.println("Motors disabled");    
     }
     break; //<- case 7: "Go" primitive instruction END.
 
@@ -194,8 +200,9 @@ void receiveData(int byteCount) {
       }
       
       motor1.setCurrentPosition(0); motor2.setCurrentPosition(0); motor3.setCurrentPosition(0);
-      enableMotorsPower();
       // Running motors. Controlling just motor1 position, because they all run the same
+      Serial.println(receivedAngle);
+      enableMotorsPower();
       while(motor1.currentPosition() != receivedAngle){
         motor1.runSpeed(); motor2.runSpeed(); motor3.runSpeed();
         delay(1);
@@ -246,15 +253,15 @@ void receiveData(int byteCount) {
 //Function turns OFF the power to the motor coils to not burn them, saving power too
 void disableMotorsPower(){
   motor1.enableOutputs(); 
-  motor2.enableOutputs();
-  motor3.enableOutputs();
+  //motor2.enableOutputs();
+  //motor3.enableOutputs();
 }
 
 //Function turns ON the power to the motor coils to not burn them, saving power too
 void enableMotorsPower(){
   motor1.disableOutputs(); 
-  motor2.disableOutputs();
-  motor3.disableOutputs();
+  //motor2.disableOutputs();
+  //motor3.disableOutputs();
 }
 
 // Maybe for future usage - function to convert decimal to binary 

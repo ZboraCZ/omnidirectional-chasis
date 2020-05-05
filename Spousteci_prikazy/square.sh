@@ -1,9 +1,10 @@
 #!/bin/sh
-#maybe !/bin/bash
-#maybe !/usr/bin/python
-#TO-TEST: Maybe it has to be #!/bin/bash or #!/usr/bin/bash or has to be even elsewhere to run CORRECTLY.
 #Script for bachelors work moving in squares and rotations.
+<<<<<<< HEAD
 echo -e "Started SQUARE combined instruction"
+=======
+printf "Started SQUARE combined instruction\n" 
+>>>>>>> Tempbranch
 
 #Going square anticlockwise
 python go.sh 90 15

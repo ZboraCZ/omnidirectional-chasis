@@ -5,19 +5,19 @@
 
 //Const for converting degrees to radians for math calculations of motor movements
 const double CONV_DEG_TO_RAD = 0.01745329251;
-//Steps multiplier for max. speed level 15 from RPi into max of 450 SPS
-const int STEP_MULTIPLIER = 30;
+//Steps multiplier for max. speed level 15 from RPi into max of 240 SPS
+const int STEP_MULTIPLIER = 16;
 
 //MOTORS AND WHEELS DECLARATIONS 
 // Diameter of wheels in cm
 const double WHEELS_DIAMETER = 5.5;
 //Wheels circumference in cm (Obvod kola)
 const double WHEELS_CIRCUMFERENCE = WHEELS_DIAMETER * PI; //=17.27875
-const double CHASIS_CIRCUMFERENCE = round(2 * PI * 20); // =126  20 is chasis radius ending at the center of wheel
+const double CHASIS_CIRCUMFERENCE = round(2 * PI * 18); // =113.097335529  18 is chasis radius ending at the center of wheel
 const double CM_ON_ONE_DEGREE_CHASIS_ROTATION = CHASIS_CIRCUMFERENCE/360;  // = 0.35 [cm]
 const double MOTOR_STEPS_PER_ONE_CHASIS_DEGREE_ROTATION = CM_ON_ONE_DEGREE_CHASIS_ROTATION/(WHEELS_CIRCUMFERENCE/200); //=7,292194287...   WHEELS_CIRCUMFERENCE/360 is about 0.047996527...
 //Max steps per second for AccelSteper library
-const int MAX_SPS = 450;
+const int MAX_SPS = 240;
 
 boolean instructionToDo = false;
 byte instructionPrimitiveCode = 255;
@@ -25,19 +25,18 @@ double receivedAngle = 0;
 //Unmodified received speedLevel. Is used for some identifications
 byte speedLevel = 0;
 //Modifier for all Motors speeds multiplications. 
-//Goes to max 450, this is default, if "Go" doesnt go first to set it.
+//Goes to max 240, this is default, if "Go" doesnt go first to set it.
 int speedModifier = 200;
 byte secureBit = 1;
 
+//##############################################################################
+//####################### MOTOR DECLARATION SECTION ############################
+//##############################################################################
 // Define stepper motor connections and motor interface type. Motor interface type must be set to 1 when using a driver:
 #define motorInterfaceType 1
 const int M1_DIR_PIN = 2; const int M1_STEP_PIN = 3;
 const int M2_DIR_PIN = 4; const int M2_STEP_PIN = 5;
 const int M3_DIR_PIN = 7; const int M3_STEP_PIN = 6;
-
-//##############################################################################
-//####################### MOTOR DECLARATION SECTION ############################
-//##############################################################################
 
 AccelStepper motor1 = AccelStepper(motorInterfaceType, M1_STEP_PIN, M1_DIR_PIN);
 AccelStepper motor2 = AccelStepper(motorInterfaceType, M2_STEP_PIN, M2_DIR_PIN);
@@ -87,7 +86,7 @@ if(secureBit == 1){
         
         enableMotorsPower();
         
-        //Calculate SPS for each motor <0,450>
+        //Calculate SPS for each motor <0,240>
         double motor1Speed = (-1 * vectorX) * speedModifier;
         double motor2Speed = (0.5 * vectorX + sqrt(3)/2 * vectorY) * speedModifier;
         double motor3Speed = (0.5 * vectorX - sqrt(3)/2 * vectorY) * speedModifier;
@@ -100,6 +99,7 @@ if(secureBit == 1){
         unsigned long startMillis = millis();
         while((millis() - startMillis) < 3000)
         {
+        
           motor1.runSpeed();
           motor2.runSpeed(); 
           motor3.runSpeed();  

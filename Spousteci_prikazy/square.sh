@@ -1,10 +1,6 @@
 #!/bin/sh
 #Script for bachelors work moving in squares and rotations.
-<<<<<<< HEAD
-echo -e "Started SQUARE combined instruction"
-=======
 printf "Started SQUARE combined instruction\n" 
->>>>>>> Tempbranch
 
 #Going square anticlockwise
 python go.sh 90 15

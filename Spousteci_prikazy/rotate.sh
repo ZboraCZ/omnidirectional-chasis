@@ -27,15 +27,15 @@ def decToBinary(decNumber, numBinPlaces):
 
 # TODO - NAVRH CEKANI NA DOKONCENI AKCE NA ARDUINU #####
 def waitForArduinoCompletion():
-	time.sleep(6.2)
-	while not isArduinoDone():
-		time.sleep(6.2)
-	print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
+	time.sleep(7.2)
+#	while not isArduinoDone():
+#		time.sleep(10)
+#	print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
 
-def isArduinoDone():
-	number = bus.read_byte(ARDUINO_ADDRESS)
-	# number = bus.read_byte_data(address, 1)
-	return True if number==1 else False
+#def isArduinoDone():
+#	number = bus.read_byte(ARDUINO_ADDRESS)
+#	# number = bus.read_byte_data(address, 1)
+#	return True if number==1 else False
 
 def checkRotationDirection(rotationDirection):
 	if rotationDirection < 0:

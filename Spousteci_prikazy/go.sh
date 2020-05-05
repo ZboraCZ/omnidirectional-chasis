@@ -27,16 +27,16 @@ def decToBinary(decNumber, numBinPlaces):
 
 # TODO - NAVRH CEKANI NA DOKONCENI AKCE NA ARDUINU #####
 def waitForArduinoCompletion():
-	time.sleep(3.2)
-	while not isArduinoDone():
-		print("Arduino still not done")
-		time.sleep(3.2)
-	print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
+	time.sleep(3.4)
+	#while not isArduinoDone():
+	#	print("Arduino still not done")
+	#	time.sleep(6.5)
+	#print('Script-Info: Arduino completed GO instruction ' + str(firstBit) + ' ' + str(secondBit))
 
-def isArduinoDone():
-	number = bus.read_byte(ARDUINO_ADDRESS)
-	# number = bus.read_byte_data(address, 1)
-	return True if number==1 else False
+#def isArduinoDone():
+#	number = bus.read_byte(ARDUINO_ADDRESS)
+#	# number = bus.read_byte_data(address, 1)
+#	return True if number==1 else False
 
 def checkSpeedLevel(speedLevel):
 	if speedLevel < 0:
